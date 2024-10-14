@@ -1,0 +1,6 @@
+fastapi
+cv2
+PIL
+torch
+numpy
+diffusers
