@@ -10,6 +10,12 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 import matplotlib.pyplot as plt
 import base64
+from pydantic import BaseModel
+
+class SDBody(BaseModel):
+    prompt: str
+    depth: str
+    image: str
 
 app = FastAPI()
 
@@ -74,11 +80,13 @@ def base64_to_pil(base64_string):
 
 @app.post("/generate")
 async def generate_image(
-    prompt: str = Form(...), 
-    image: str = Form(...),
-    depth: str = Form(...)
+    body: SDBody
 ):
     try:
+        
+        prompt = body.prompt
+        depth = body.depth
+        image = body.image
         print(prompt)
         
         depth = base64_to_pil(depth).convert("L")
