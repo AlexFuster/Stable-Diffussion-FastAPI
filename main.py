@@ -10,12 +10,14 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 import matplotlib.pyplot as plt
 import base64
-from pydantic import BaseModel
+from typing import Optional
+from pydantic import BaseModel, Field
 
 class SDBody(BaseModel):
     prompt: str
     depth: str
     image: str
+    doSecond: Optional[int] = Field(1)
 
 app = FastAPI()
 
@@ -87,6 +89,7 @@ async def generate_image(
         prompt = body.prompt
         depth = body.depth
         image = body.image
+        doSecond = body.doSecond
         print(prompt)
         
         depth = base64_to_pil(depth).convert("L")
@@ -123,19 +126,22 @@ async def generate_image(
         
         blended.save("input_image_2.png")
         
-        with torch.no_grad():
-            res = img2img_pipeline(
-                prompt,
-                negative_prompt='upper floors, roof, people, reflectionscartoon, painting, illustration, (worst quality, low quality, normal quality:2)',
-                image = blended,
-                control_image = canny,
-                num_inference_steps=20,
-                strength=0.2,
-                height = canny.height,
-                width = canny.width,
-                controlnet_conditioning_scale=0.5,
-                generator=generator
-            ).images[0]
+        if doSecond:
+            with torch.no_grad():
+                res = img2img_pipeline(
+                    prompt,
+                    negative_prompt='upper floors, roof, people, reflectionscartoon, painting, illustration, (worst quality, low quality, normal quality:2)',
+                    image = blended,
+                    control_image = canny,
+                    num_inference_steps=20,
+                    strength=0.2,
+                    height = canny.height,
+                    width = canny.width,
+                    controlnet_conditioning_scale=0.5,
+                    generator=generator
+                ).images[0]
+        else:
+            res = blended
             
         res.save("generated_image_2.png")        
 
